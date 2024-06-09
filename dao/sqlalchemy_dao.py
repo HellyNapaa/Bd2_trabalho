@@ -34,10 +34,12 @@ class OrderDAOSQLAlchemy:
         session = SessionLocal()
         try:
             ranking = session.query(
-                Employee.firstname + ' ' + Employee.lastname,
+                (Employee.firstname + ' ' + Employee.lastname).label('employeename'),
                 func.count(Order.orderid).label('totalorders'),
                 func.sum(OrderDetail.unitprice * OrderDetail.quantity).label('totalsales')
-            ).join(Order).join(OrderDetail).filter(
+            ).join(Order, Employee.employeeid == Order.employeeid
+            ).join(OrderDetail, Order.orderid == OrderDetail.orderid
+            ).filter(
                 Order.orderdate.between(start_date, end_date)
             ).group_by(
                 Employee.employeeid
