@@ -1,5 +1,5 @@
 from config.config import SessionLocal
-from model.models import Order, OrderDetail, Employee
+from model.models import Order, OrderDetail, Employee, Customer
 from sqlalchemy import func, desc
 
 class OrderDAOSQLAlchemy:
@@ -18,14 +18,17 @@ class OrderDAOSQLAlchemy:
             session.close()
 
     @staticmethod
-    def get_order_details(orderid):
+    def get_order_details(order_id):
         session = SessionLocal()
         try:
-            order = session.query(Order).filter(Order.orderid == orderid).first()
+            order = session.query(Order).filter(Order.orderid == order_id).first()
             if order:
-                details = session.query(OrderDetail).filter(OrderDetail.orderid == orderid).all()
-                return order, details
-            return None, None
+                details = session.query(OrderDetail).filter(OrderDetail.orderid == order_id).all()
+                customer = session.query(Customer).filter(Customer.customerid == order.customerid).first()
+                employee = session.query(Employee).filter(Employee.employeeid == order.employeeid).first()
+
+                return order, details, employee, customer
+            return None, None, None, None
         finally:
             session.close()
 

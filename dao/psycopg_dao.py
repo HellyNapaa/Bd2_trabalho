@@ -1,5 +1,5 @@
 from config.config import get_psycopg_connection
-from model.models import Order, OrderDetail
+from model.models import Order, OrderDetail, Employee, Customer
 
 class OrderDAOPsycopg:
     @staticmethod
@@ -50,11 +50,12 @@ class OrderDAOPsycopg:
         try:
             with conn.cursor() as cur:
                 cur.execute("""
-                    SELECT o.orderid, o.orderdate, o.requireddate, o.shippeddate, o.freight,
-                        o.shipname, o.shipaddress, o.shipcity, o.shipregion, o.shippostalcode, o.shipcountry,
-                        o.shipperid, od.productid, od.unitprice, od.quantity, od.discount
+                    SELECT o.orderid, c.contactname, e.firstname, o.orderdate,
+                        od.productid, od.unitprice, od.quantity
                     FROM northwind.orders o
                     JOIN northwind.order_details od ON o.orderid = od.orderid
+                    JOIN northwind.customers c ON o.customerid = c.customerid
+                    JOIN northwind.employees e ON o.employeeid = e.employeeid
                     WHERE o.orderid = %s
                 """, (order_id,))
                 result = cur.fetchall()
@@ -62,35 +63,28 @@ class OrderDAOPsycopg:
                 if result:
                     order_data = result[0]
                     order = Order(
-                        orderid=order_data[0],         
-                        orderdate=order_data[1],       
-                        requireddate=order_data[2],    
-                        shippeddate=order_data[3],     
-                        freight=order_data[4],         
-                        shipname=order_data[5],        
-                        shipaddress=order_data[6],     
-                        shipcity=order_data[7],        
-                        shipregion=order_data[8],      
-                        shippostalcode=order_data[9], 
-                        shipcountry=order_data[10],     
-                        shipperid=order_data[11]        
+                        orderid=order_data[0],
+                        orderdate=order_data[3]
                     )
-
+                    customer = Customer(
+                        contactname=order_data[1]
+                    )
+                    employee = Employee(
+                        firstname=order_data[2]
+                    )
                     details = [
                         OrderDetail(
-                            productid=row[12],  
-                            unitprice=row[13],  
-                            quantity=row[14],   
-                            discount=row[15]   
+                            productid=row[4],
+                            unitprice=row[5],
+                            quantity=row[6]
                         ) for row in result
                     ]
 
-                    return order, details
+                    return order, details, employee, customer
                 else:
-                    return None, None
+                    return None, None, None, None
         finally:
             conn.close()
-
 
     @staticmethod
     def get_employee_ranking(start_date, end_date):

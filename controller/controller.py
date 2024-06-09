@@ -47,9 +47,9 @@ class OrderController:
         print("Order created successfully!")
 
     def show_order_details(self, order_id):
-        order, details = self.dao.get_order_details(order_id)
+        order, details, employee, customer = self.dao.get_order_details(order_id)
         from view.view import OrderView
-        OrderView.display_order_details(order, details)
+        OrderView.display_order_details(order, details, employee, customer)
 
     def show_employee_ranking(self, start_date, end_date):
         ranking = self.dao.get_employee_ranking(start_date, end_date)
